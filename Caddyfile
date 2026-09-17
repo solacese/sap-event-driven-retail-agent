@@ -1,0 +1,22 @@
+# ---------------------------------------------------------------------------
+# Caddy: TLS via Let's Encrypt + HTTP basic auth in front of the app, for
+# defence in depth on top of the app's own password gate.
+#
+# Set DEMO_DOMAIN and BASIC_AUTH_HASH as env, or edit inline. Generate a hash:
+#   docker run --rm caddy:2 caddy hash-password --plaintext 'your-password'
+#
+# SSE needs buffering off, which Caddy's reverse_proxy handles by default for
+# text/event-stream.
+# ---------------------------------------------------------------------------
+{$DEMO_DOMAIN:localhost} {
+	encode gzip
+
+	basic_auth {
+		# username  bcrypt-hash
+		demo {$BASIC_AUTH_HASH:JDJhJDE0JLU.replace-with-a-real-hash}
+	}
+
+	reverse_proxy app:8080 {
+		flush_interval -1
+	}
+}

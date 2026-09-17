@@ -1,0 +1,53 @@
+# ---------------------------------------------------------------------------
+# LiteLLM proxy config. Exposes an OpenAI-compatible API on :4000 that the app
+# probes first. The primary route "discount-bot" fronts SAP AI Core (SAP
+# Generative AI Hub), so the campaign runs through SAP's platform while the app
+# stays provider-agnostic. A local Ollama route is kept as an offline fallback.
+#
+# Run locally:
+#   pip install 'litellm[proxy]'
+#   litellm --config litellm.config.yaml --port 4000
+# Or via docker compose (service "litellm", profile "llm").
+#
+# SAP AI Core credentials come from the environment (never commit them):
+#   AICORE_SERVICE_KEY   the full service key JSON from BTP
+#   AICORE_RESOURCE_GROUP   usually "default"
+# See docs/SAP_AI_SDK.md for the exact values a SAP prospect sets.
+# ---------------------------------------------------------------------------
+model_list:
+  # PRIMARY: SAP AI Core via the LiteLLM "sap" provider. The client calls the
+  # friendly name "discount-bot"; LiteLLM adds the sap/ route and handles the
+  # OAuth token exchange using AICORE_SERVICE_KEY. Point sap/<model> at whatever
+  # model your AI Core deployment serves (gpt-4o, gpt-4o-mini, anthropic, etc.).
+  - model_name: discount-bot
+    litellm_params:
+      model: sap/gpt-4o
+      # Credentials are read from AICORE_SERVICE_KEY / AICORE_RESOURCE_GROUP env.
+      aicore_service_key: os.environ/AICORE_SERVICE_KEY
+      aicore_resource_group: os.environ/AICORE_RESOURCE_GROUP
+
+  # Stable alias so LLM_MODEL can stay "gpt-4o" across backends.
+  - model_name: gpt-4o
+    litellm_params:
+      model: sap/gpt-4o
+      aicore_service_key: os.environ/AICORE_SERVICE_KEY
+      aicore_resource_group: os.environ/AICORE_RESOURCE_GROUP
+
+  # OFFLINE FALLBACK: local Ollama, for airport rehearsals with no AI Core.
+  # Select it by setting LLM_MODEL=discount-bot-local, or swap it into the
+  # primary route above when running fully offline.
+  - model_name: discount-bot-local
+    litellm_params:
+      model: ollama_chat/hf.co/unsloth/Qwen3.8-27B-GGUF:Q4_K_M
+      api_base: http://host.docker.internal:11434
+
+litellm_settings:
+  drop_params: true
+  # If SAP AI Core is unreachable, fall back to the local model so a demo never
+  # dead-ends at the proxy layer (the app also has its own mock fallback).
+  fallbacks: [{ "discount-bot": ["discount-bot-local"] }]
+
+general_settings:
+  # No master key on the local proxy. Keep it behind the app + Caddy, never
+  # expose :4000 publicly.
+  master_key: null

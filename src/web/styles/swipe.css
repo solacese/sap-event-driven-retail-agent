@@ -1,0 +1,340 @@
+/* ---------------------------------------------------------------------------
+   Swipe HITL page - mobile-first approval surface at /swipe. Same visual system
+   as the desktop dashboard: SAP Horizon light theme, white panels on the shell
+   grey canvas, gold/blue accents, dark slate text. It reuses the shared
+   brand.css classes (.panel, .result-card, .campaign-card, .metric-grid, .chip,
+   .confidence, .btn) so a campaign reads identically to the desktop; this file
+   only owns the page shell, the swipe affordances (stamps, tilt, countdown) and
+   the score/footer chrome.
+   --------------------------------------------------------------------------- */
+
+.swipe-app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow: hidden;
+  touch-action: none; /* we own the horizontal drag gesture */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* --- header: the same wordmark lockup as the desktop, plus the score --- */
+.swipe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: max(12px, env(safe-area-inset-top)) 18px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.swipe-wordmark {
+  font-family: var(--font-head);
+  font-weight: 400;
+  font-size: var(--fs-h2);
+  letter-spacing: -0.01em;
+  color: var(--text-dim);
+}
+.swipe-wordmark strong {
+  font-weight: 700;
+  color: var(--text);
+  background: linear-gradient(90deg, var(--text) 60%, var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* --- score: gold tabular number, matches the cost-meter primary stat --- */
+.swipe-score {
+  position: relative;
+  text-align: right;
+  min-width: 84px;
+}
+.swipe-score-total {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.swipe-score-meta {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.swipe-streak {
+  color: var(--warning);
+  font-weight: 700;
+}
+.swipe-score-flash {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--success);
+  white-space: nowrap;
+  animation: swipeFlashUp 900ms ease-out forwards;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes swipeFlashUp {
+  0% { opacity: 0; transform: translateY(6px) scale(0.9); }
+  20% { opacity: 1; transform: translateY(0) scale(1.05); }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+
+/* --- sub-header: section title + queue count, like a panel-title-row --- */
+.swipe-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px 4px;
+}
+.swipe-subhead-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.swipe-subhead h2 {
+  font-size: var(--fs-h2);
+  margin: 0;
+}
+.swipe-hint {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+.swipe-queue-count {
+  flex: 0 0 auto;
+  font-size: var(--fs-sm);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* --- stage: centres the single focused panel --- */
+.swipe-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px 12px;
+  overflow: hidden;
+}
+
+/* The focused approval panel. Inherits .panel chrome (white, bordered, shadow)
+   from brand.css; here it becomes a centred, swipeable column that sizes to its
+   content (up to the stage height) with an internal scroll so a long campaign
+   never clips on a phone. */
+.swipe-panel {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 100%;
+  cursor: grab;
+  will-change: transform;
+  padding: 16px;
+}
+.swipe-panel:active {
+  cursor: grabbing;
+}
+
+.swipe-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.swipe-panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.swipe-emoji {
+  font-size: 34px;
+  line-height: 1;
+}
+.swipe-panel-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Nudge the campaign metric grid to read big on a phone. */
+.swipe-metric-grid .value {
+  font-size: var(--fs-lg);
+}
+
+.swipe-loading {
+  margin: auto;
+  padding: 40px 0;
+  color: var(--text-dim);
+  font-size: var(--fs-md);
+}
+
+/* --- approve / reject stamps: shown while dragging --- */
+.swipe-stamp {
+  position: absolute;
+  top: 18px;
+  padding: 5px 12px;
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border: 3px solid;
+  border-radius: 10px;
+  z-index: 5;
+  pointer-events: none;
+}
+.swipe-stamp.like {
+  right: 18px;
+  color: var(--success);
+  border-color: var(--success);
+  transform: rotate(12deg);
+}
+.swipe-stamp.nope {
+  left: 18px;
+  color: var(--red);
+  border-color: var(--red);
+  transform: rotate(-12deg);
+}
+
+/* --- countdown bar across the top edge of the panel --- */
+.swipe-countdown {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--panel-2);
+  border-radius: var(--radius) var(--radius) 0 0;
+  overflow: hidden;
+  z-index: 6;
+}
+.swipe-countdown-fill {
+  height: 100%;
+  transition: width 90ms linear;
+}
+.swipe-countdown-fill.good { background: var(--success); }
+.swipe-countdown-fill.warn { background: var(--gold); }
+.swipe-countdown-fill.bad { background: var(--red); }
+
+/* Untimed (first card): calm full bar plus a small caption so the player knows
+   there's no clock yet. */
+.swipe-countdown--untimed {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--success) 12%, var(--panel-2));
+}
+.swipe-countdown--untimed .swipe-countdown-fill {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+}
+.swipe-countdown-label {
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--success) 55%, var(--text));
+}
+
+/* --- empty / summary state: a centred panel, same chrome --- */
+.swipe-empty {
+  width: 100%;
+  max-width: 420px;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  padding: 32px 24px;
+}
+.swipe-empty-emoji {
+  font-size: 52px;
+  margin-bottom: 2px;
+}
+.swipe-empty h2 {
+  font-size: var(--fs-h2);
+  margin: 0;
+}
+.swipe-empty-hint {
+  color: var(--text-dim);
+  font-size: var(--fs-md);
+  max-width: 300px;
+  margin: 0;
+  line-height: 1.4;
+}
+.swipe-empty-score {
+  font-family: var(--font-mono);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 4px 0 0;
+}
+.swipe-empty .btn {
+  margin-top: 14px;
+}
+
+/* --- footer action bar: reject / deal / approve, using shared .btn --- */
+.swipe-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 18px max(14px, env(safe-area-inset-bottom));
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
+.swipe-action {
+  flex: 1 1 0;
+  max-width: 180px;
+  justify-content: center;
+}
+.swipe-deal {
+  flex: 0 0 auto;
+}
+
+/* The shared .btn.yes/.btn.no read as approve/reject; make them fill the footer
+   cell and sit a touch larger for thumbs. */
+.swipe-footer .btn.big {
+  padding: 12px 18px;
+}
+
+/* Desktop / wide: keep the swipe surface as a centred column so it never
+   stretches edge-to-edge on a laptop; the shell stays the same light theme. */
+@media (min-width: 640px) {
+  .swipe-header,
+  .swipe-subhead,
+  .swipe-footer {
+    padding-left: max(18px, calc((100vw - 640px) / 2));
+    padding-right: max(18px, calc((100vw - 640px) / 2));
+  }
+}

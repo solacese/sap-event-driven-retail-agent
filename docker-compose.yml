@@ -1,0 +1,65 @@
+# ---------------------------------------------------------------------------
+# Local + simple-AWS deployment: app + Caddy (TLS + basic auth) + optional
+# LiteLLM proxy. For a laptop run without a broker, mock mode needs only "app".
+#
+#   docker compose up -d app            # app only, mock broker, mock LLM
+#   docker compose --profile llm up -d  # add LiteLLM proxy on :4000
+#   docker compose --profile edge up -d # add Caddy TLS + basic auth
+# ---------------------------------------------------------------------------
+services:
+  app:
+    build: .
+    environment:
+      PORT: 8080
+      NODE_ENV: production
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-solace}
+      SESSION_SECRET: ${SESSION_SECRET:-change-me}
+      BROKER_MODE: ${BROKER_MODE:-mock}
+      SIMULATORS_ENABLED: ${SIMULATORS_ENABLED:-true}
+      TOPIC_ROOT: ${TOPIC_ROOT:-acme/retail}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai_compatible}
+      # In compose, reach the litellm service by name.
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://litellm:4000/v1}
+      LLM_MODEL: ${LLM_MODEL:-discount-bot}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    profiles: ["llm"]
+    command: ["--config", "/app/litellm.config.yaml", "--port", "4000"]
+    environment:
+      # SAP AI Core credentials for the "discount-bot" route. When unset,
+      # LiteLLM falls back to the local Ollama model so the demo still runs.
+      AICORE_SERVICE_KEY: ${AICORE_SERVICE_KEY:-}
+      AICORE_RESOURCE_GROUP: ${AICORE_RESOURCE_GROUP:-default}
+    volumes:
+      - ./litellm.config.yaml:/app/litellm.config.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    profiles: ["edge"]
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,1753 @@
+/* ---------------------------------------------------------------------------
+   SAP brand, light theme (SAP Horizon look). Co-branded SAP x Solace demo.
+   No external fonts or CDNs (CSP forbids them). SAP's UI typeface is "72"; we
+   name it first and fall back to the system sans. Palette from SAP Horizon:
+   SAP Gold #F0AB00 (brand accent), Bright Blue #0070F2 (interactive), neutral
+   greys on white surfaces, dark slate text. WCAG AA contrast throughout.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* surfaces */
+  --bg: #f5f6f7; /* app canvas, SAP shell grey */
+  --panel: #ffffff; /* card surface */
+  --panel-2: #f0f2f4; /* nested / inset surface */
+  --border: #d9dde1; /* neutral divider */
+
+  /* brand + interactive */
+  --gold: #f0ab00; /* SAP Gold, brand accent */
+  --blue: #0070f2; /* SAP Bright Blue, interactive */
+  --blue-dark: #0057d2; /* hover */
+  --sky: #0070f2; /* legacy alias -> blue */
+  --green: #0070f2; /* legacy alias -> blue (kept so old classes read as SAP blue) */
+
+  /* status */
+  --success: #256f3a; /* SAP positive */
+  --warning: #e76500; /* SAP critical */
+  --orange: #e76500; /* legacy alias */
+  --red: #bb0000; /* SAP negative */
+  --magenta: #a100c2; /* external-context accent */
+  --data-blue: #0070f2;
+  --danger: #bb0000; /* alias of --red for approval/negative actions */
+
+  /* text */
+  --text: #1d2d3e; /* SAP dark slate */
+  --text-dim: #5b6b7b; /* secondary */
+  --white: #1d2d3e; /* legacy alias: headings are dark on light bg now */
+
+  /* Type. "72" is SAP's licensed UI face; a genuine SAP deployment that ships
+     it will use it first. We self-host Inter Variable (a humanist grotesque in
+     the same lineage) as the shipped default so the demo never renders in a
+     raw system fallback. Mono: JetBrains Mono for topics + JSON. */
+  --font-head: '72', 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-body: '72', 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* radius scale: sm for controls/cards, base for panels, pill for chips */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 999px;
+
+  /* type scale (one ladder used app-wide; no ad-hoc px sizes) */
+  --fs-xs: 11px; /* eyebrow labels, sources, meta */
+  --fs-sm: 12px; /* secondary text, chips, badges */
+  --fs-base: 13px; /* default body / dense copy */
+  --fs-md: 14px; /* buttons, questions, prose */
+  --fs-lg: 15px; /* headline, base body */
+  --fs-h3: 15px; /* section headings (h3) */
+  --fs-h2: 17px; /* panel headings (h2) */
+  --fs-display: 20px; /* wordmark */
+
+  /* spacing scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+
+  --gap: 16px;
+  --shadow: 0 1px 3px rgba(29, 45, 62, 0.08), 0 4px 12px rgba(29, 45, 62, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-lg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv05' 1, 'cv08' 1, 'ss03' 1; /* Inter: open 'a'/'l', flat-top digits */
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-head);
+  font-weight: 650;
+  letter-spacing: -0.01em; /* Inter reads tighter than "72" at heading sizes */
+  line-height: 1.3;
+  margin: 0 0 var(--sp-2);
+  color: var(--text);
+}
+
+h3 {
+  font-size: var(--fs-h3);
+}
+
+code,
+kbd,
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  font-feature-settings: normal;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+a {
+  color: var(--blue);
+}
+
+/* ---- scrollbars: thin, neutral, consistent across the internal-scroll
+   regions (feed list, rails, JSON, drawer). Default OS scrollbars are one of
+   the small tells that a UI is unfinished; these read as deliberate. ---- */
+.feed-list,
+.panel-scroll,
+.feed-json,
+.drawer,
+.custom-event textarea,
+.freetext-input {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text-dim) 35%, transparent) transparent;
+}
+
+.feed-list::-webkit-scrollbar,
+.panel-scroll::-webkit-scrollbar,
+.feed-json::-webkit-scrollbar,
+.drawer::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.feed-list::-webkit-scrollbar-thumb,
+.panel-scroll::-webkit-scrollbar-thumb,
+.feed-json::-webkit-scrollbar-thumb,
+.drawer::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-dim) 30%, transparent);
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.feed-list::-webkit-scrollbar-thumb:hover,
+.panel-scroll::-webkit-scrollbar-thumb:hover,
+.feed-json::-webkit-scrollbar-thumb:hover,
+.drawer::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--text-dim) 50%, transparent);
+  background-clip: padding-box;
+}
+
+.feed-list::-webkit-scrollbar-track,
+.panel-scroll::-webkit-scrollbar-track,
+.feed-json::-webkit-scrollbar-track,
+.drawer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---- reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---- app shell ---- */
+/* The shell fills exactly one viewport: header + toolbar + cost meter sit at
+   natural height, and .app-main claims the rest. Each of the three columns
+   then scrolls INTERNALLY, so the mesh feed can grow without pushing the Agent
+   and Human-in-the-Loop rails off-screen. The page itself never scrolls on a
+   desktop viewport - the columns stay pinned side by side. */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-main {
+  flex: 1;
+  display: grid;
+  /* Two-column story, split evenly: the agent rail (left) gets half the width so
+     all of its info is visible at once, and the live mesh feed gets the other
+     half. */
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  padding: var(--gap);
+  align-items: stretch;
+  /* Allow the grid (and its scrollable children) to shrink below content. */
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Wide desktop: keep the even 50/50 split, just widen the gutters. */
+@media (min-width: 1600px) {
+  .app-main {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+  }
+}
+
+/* Tablet / small laptop (1001–1280px): tighten the gutters, keep the 50/50 split. */
+@media (max-width: 1280px) and (min-width: 1001px) {
+  .app-main {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+}
+
+/* Below the 3-column breakpoint the shell scrolls as one page again: fixed
+   column heights make no sense when the columns are stacked vertically. */
+@media (max-width: 1000px) {
+  .app {
+    height: auto;
+    overflow: visible;
+  }
+
+  .app-main {
+    grid-template-columns: 1fr;
+    overflow: visible;
+    gap: 12px;
+  }
+}
+
+/* Phone: tighten the shell chrome padding so content wins the small screen. */
+@media (max-width: 560px) {
+  .app-main {
+    padding: 10px;
+    gap: 10px;
+  }
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  /* A panel is a flex column: a fixed title row on top and one scrollable body
+     below. min-height:0 lets that body actually scroll inside the grid track. */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 1000px) {
+  .panel {
+    overflow: visible;
+  }
+}
+
+.panel h2 {
+  font-size: var(--fs-h2);
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  /* Pinned header inside the flex-column panel; the body scrolls beneath it. */
+  flex: 0 0 auto;
+}
+
+.latency-badge {
+  flex: 0 0 auto;
+  font-size: var(--fs-sm);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.explainer {
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  margin: 2px 0 var(--sp-3);
+}
+
+/* ---- chips ---- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.chip.mono {
+  font-family: var(--font-mono);
+}
+
+.chip.green {
+  color: #ffffff;
+  background: var(--blue);
+  border-color: var(--blue);
+  font-weight: 600;
+}
+
+.chip.sky {
+  color: #ffffff;
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.chip.orange {
+  color: #ffffff;
+  background: var(--warning);
+  border-color: var(--warning);
+  font-weight: 600;
+}
+
+.chip.gold {
+  color: #4a3600;
+  background: var(--gold);
+  border-color: var(--gold);
+  font-weight: 600;
+}
+
+.chip.outline {
+  background: rgba(0, 112, 242, 0.06);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.chip.dim {
+  color: var(--text-dim);
+}
+
+/* ---- buttons ---- */
+.btn {
+  font-size: var(--fs-md);
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--blue);
+  background: transparent;
+  color: var(--blue);
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease,
+    box-shadow 0.14s ease, transform 0.05s ease;
+}
+
+.btn:hover {
+  background: rgba(0, 112, 242, 0.08);
+}
+
+.btn:active {
+  transform: translateY(0.5px);
+}
+
+.btn.primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #ffffff;
+}
+
+.btn.primary:hover {
+  background: var(--blue-dark);
+  border-color: var(--blue-dark);
+}
+
+.btn.danger {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.btn.danger:hover {
+  background: rgba(187, 0, 0, 0.08);
+}
+
+.btn.big {
+  font-size: var(--fs-lg);
+  padding: 10px 18px;
+}
+
+.btn.yes {
+  background: var(--success);
+  color: #ffffff;
+  border-color: var(--success);
+}
+
+.btn.no {
+  background: transparent;
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Keyboard focus: a consistent ring on every interactive control. Mouse users
+   never see it (:focus-visible), so it stays clean but stays accessible. */
+.btn:focus-visible,
+.chip[role='button']:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Full-width button inside a .btn-row (e.g. the AEM broker shortcut). */
+.btn-block {
+  flex: 1 1 100%;
+}
+
+/* ---- inputs ---- */
+input,
+textarea,
+select {
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  width: 100%;
+}
+
+textarea.mono,
+input.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 0;
+  border-color: var(--blue);
+}
+
+label.field {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+label.field span {
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Inline form feedback: a neutral status line and an error line, both on the
+   shared type scale so forms match the rest of the app. */
+.form-status {
+  font-size: var(--fs-base);
+  color: var(--blue);
+  align-self: center;
+}
+
+.form-error {
+  font-size: var(--fs-sm);
+  color: var(--red);
+  margin: 8px 0 0;
+}
+
+/* ---- header ---- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* Primary actions pinned to the top right of the header. */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Agent LLM selector, inside "The Agent" rail. Stacks label over the select and
+   spans the rail width so it reads as a property of the bot. */
+.llm-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 12px;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+.llm-picker-label {
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: var(--fs-xs);
+}
+.llm-picker select {
+  font: inherit;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* The brand lockup. The "Solace + SAP + AI =" equation reads as the pitch in a
+   quiet weight; the product name is the one bold mark it resolves to. No leading
+   glyph - the wordmark stands on its own. */
+.wordmark-eq {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-head);
+  font-weight: 400;
+  font-size: var(--fs-display);
+  letter-spacing: -0.01em;
+  color: var(--text-dim);
+}
+
+.wordmark-eq strong {
+  font-weight: 700;
+  color: var(--text);
+  background: linear-gradient(90deg, var(--text) 60%, var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* ---- toolbar: the demo controls, their own simple section ---- */
+.toolbar {
+  display: block;
+  padding: 12px 18px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Cost meter: a compact live strip of the agent's operational counters. */
+.cost-meter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 22px;
+  padding: 8px 18px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.cost-stat {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.cost-stat-value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cost-stat-label {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cost-stat--primary .cost-stat-value {
+  color: var(--gold);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.cost-stat--primary .cost-stat-label {
+  color: var(--text);
+}
+
+/* Budget bar: sits to the right of Avg latency (pushed right via auto margin),
+   a $1 operating budget filling as the agent runs. */
+.cost-budget {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 132px;
+  line-height: 1.1;
+  padding-left: 22px;
+  border-left: 1px solid var(--border);
+}
+
+.cost-budget-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cost-budget-pct {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cost-budget-track {
+  position: relative;
+  height: 7px;
+  width: 100%;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  overflow: hidden;
+}
+
+.cost-budget-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--gold);
+  transition: width 320ms ease;
+}
+
+.cost-budget--full .cost-budget-fill {
+  background: var(--danger, #d9534f);
+}
+
+.cost-budget--full .cost-budget-pct {
+  color: var(--danger, #d9534f);
+}
+
+.cost-meter-model {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.cost-meter-access {
+  color: color-mix(in srgb, var(--gold) 80%, var(--text-dim));
+}
+
+/* The Agent-LLM picker now lives in the budget bar. Override the rail's column
+   layout so it reads as one compact, inline pill next to the budget gauge. */
+.cost-meter-model.llm-picker {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  /* Keep the pill's own border/padding; the label + select sit inside it. */
+}
+.cost-meter-model.llm-picker .llm-picker-label {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+}
+.cost-meter-model.llm-picker select {
+  width: auto;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .cost-budget {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+/* Phone: compress the fixed chrome so the three stacked panels get the screen,
+   and let the header wrap gracefully rather than crushing the wordmark. */
+@media (max-width: 560px) {
+  .header {
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .wordmark-eq {
+    font-size: var(--fs-h2);
+  }
+  .toolbar,
+  .cost-meter {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .cost-meter {
+    gap: 8px 16px;
+  }
+}
+
+/* Five cells: four scenario buttons plus a wider free-text cell. The four
+   scenarios are equal; the fifth (describe your scenario) is wider. All cells
+   stretch to equal height so the free-text box fills vertically. */
+.toolbar-scenarios {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) 1.6fr;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Medium widths: two rows of scenarios, free-text spanning full width below. */
+@media (max-width: 1200px) and (min-width: 901px) {
+  .toolbar-scenarios {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .toolbar-scenarios .freetext {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .toolbar-scenarios {
+    grid-template-columns: 1fr;
+  }
+}
+
+.toolbar-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-right: 4px;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Scenario buttons carry a stacked label: name + a short outcome hint + a
+   fuller description that explains what the agent actually does. */
+.btn.scenario {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  text-align: left;
+  padding: 10px 14px;
+  width: 100%;
+  height: 100%;
+  white-space: normal;
+}
+
+.btn.scenario .scenario-name {
+  font-weight: 600;
+  font-size: var(--fs-base);
+  color: var(--text);
+}
+
+.btn.scenario .scenario-hint {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.btn.scenario .scenario-desc {
+  font-size: var(--fs-xs);
+  line-height: 1.35;
+  color: var(--text-dim);
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.btn.scenario:hover .scenario-hint {
+  color: var(--blue);
+}
+
+/* Free-text scenario cell: the fourth toolbar cell. A stacked label + a
+   vertically-filling textarea + a small Publish button pinned bottom-right.
+   Shares the .scenario card chrome (border, radius) via the .scenario class. */
+.freetext {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 10px 14px;
+  height: 100%;
+  cursor: default;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}
+
+.freetext .scenario-name {
+  font-weight: 600;
+  font-size: var(--fs-base);
+  color: var(--text);
+}
+
+.freetext-input {
+  flex: 1 1 auto;
+  min-height: 48px;
+  width: 100%;
+  resize: vertical;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: var(--fs-base);
+  line-height: 1.35;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.freetext-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0, 112, 242, 0.15);
+}
+
+.freetext-publish {
+  align-self: flex-end;
+  padding: 6px 16px;
+  font-size: var(--fs-base);
+}
+
+/* ---- login gate ---- */
+.gate {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.gate .card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  width: 360px;
+  max-width: 100%;
+}
+
+.gate .error {
+  color: var(--warning);
+  font-size: var(--fs-base);
+  margin-top: 8px;
+}
+
+/* ---- agent rail ---- */
+.agent-avatar {
+  width: 100%;
+  /* Track the fluid avatar (clamp(150px, 18vw, 260px)) so the halo/panel
+     shrinks with it instead of holding a fixed 260px well on small screens. */
+  min-height: clamp(160px, 19vw, 276px);
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at center, rgba(0, 112, 242, 0.06), transparent 70%);
+  border-radius: var(--radius);
+  padding: 8px 0;
+}
+
+.agent-avatar svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.agent-name {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: var(--fs-h2);
+  margin-top: 8px;
+}
+
+/* Subscription breakdown under the avatar: two equal-width groups side by side
+   - "Listens ambiently" vs. "Acts with" - so the two halves of the event-driven
+   story carry the same visual weight. Stacks on a narrow rail. */
+.subscriptions {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .subscriptions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.subscriptions-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+.subscription-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.subscription-list li {
+  font-size: var(--fs-base);
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 3px 12px;
+}
+
+/* Two equal-weight groups below the agent: the ambient context it listens to
+   vs. the events it acts on. Both are boxed to the same shape so they read as a
+   matched pair; the "acts with" group is gold-accented as the active side. */
+.sub-group {
+  height: 100%;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  border-radius: var(--radius-md, 10px);
+  padding: 10px 12px;
+}
+
+.sub-group-note {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+
+.sub-group-note strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.sub-group--trigger {
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--border));
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
+}
+
+.sub-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sub-chip--cached {
+  border-style: dashed;
+  color: var(--text-dim);
+}
+
+.sub-chip--trigger {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 16%, var(--panel-2));
+  color: var(--text);
+  font-weight: 600;
+}
+
+.sub-chip-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text-dim) 18%, transparent);
+  color: var(--text-dim);
+}
+
+.sub-chip--trigger .sub-chip-tag {
+  background: var(--gold);
+  color: #2a1c00;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  font-size: var(--fs-base);
+  margin: 10px 0;
+}
+
+.kv dt {
+  color: var(--text-dim);
+}
+
+.kv dd {
+  margin: 0;
+}
+
+.pulse-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+}
+
+.pulse .led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c7ced4;
+  transition: background 0.1s ease, box-shadow 0.1s ease;
+}
+
+.pulse.on .led {
+  background: var(--blue);
+  box-shadow: 0 0 8px var(--blue);
+}
+
+.status-connected {
+  color: var(--success);
+}
+
+.status-disconnected {
+  color: var(--warning);
+}
+
+/* ---- mesh feed ---- */
+.feed-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+  /* Pinned filter controls; only the feed list below scrolls. */
+  flex: 0 0 auto;
+}
+
+.filter-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.toggle {
+  font-size: var(--fs-xs);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.toggle.active {
+  color: #ffffff;
+  background: var(--blue);
+  border-color: var(--blue);
+  font-weight: 600;
+}
+
+/* Listen to a specific topic: a substring filter over the live mesh. */
+.topic-listen {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.topic-listen input {
+  width: 100%;
+  font-size: var(--fs-sm);
+  padding: 6px 26px 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.topic-listen input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0, 112, 242, 0.2);
+}
+
+.topic-clear {
+  position: absolute;
+  right: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: var(--fs-lg);
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.topic-clear:hover {
+  color: var(--text);
+}
+
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Fill the panel below the toolbar and scroll internally, rather than a fixed
+     68vh that ignored the real column height and left the panel ragged. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Generic scrollable panel body: the title row stays pinned, this region takes
+   the remaining height and scrolls. Used by the Agent and Human-in-the-Loop
+   rails so their columns match the mesh and the page never double-scrolls. */
+.panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Reserve the vertical scrollbar's gutter so content doesn't reflow when it
+     appears, without the negative-margin trick that caused a 1px horizontal
+     scrollbar. */
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 1000px) {
+  .panel-scroll {
+    overflow-y: visible;
+  }
+}
+
+.feed-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  background: var(--panel);
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  /* Off-screen rows skip layout/paint: near-zero cost for the collapsed rows
+     in a long feed without pulling in a virtualization dependency. The
+     intrinsic size keeps the scrollbar honest for un-rendered rows. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 44px;
+}
+
+.feed-row:hover {
+  border-color: color-mix(in srgb, var(--blue) 45%, var(--border));
+  box-shadow: 0 1px 4px rgba(29, 45, 62, 0.08);
+}
+
+.feed-row.out {
+  background: rgba(0, 112, 242, 0.05);
+}
+
+.feed-row.timeout {
+  border-color: var(--warning);
+  background: rgba(231, 101, 0, 0.07);
+}
+
+.feed-row .topic {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--blue);
+  word-break: break-all;
+}
+
+.feed-row .summary {
+  font-size: var(--fs-base);
+  color: var(--text);
+  margin-top: 3px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.feed-row .meta {
+  margin-top: 4px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dir-badge {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.dir-badge.out {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+.feed-json {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 320px;
+  overflow: auto;
+}
+
+/* ---- outcome rail ---- */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 2px solid var(--border);
+}
+
+.timeline li {
+  position: relative;
+  padding: 6px 0 12px 18px;
+}
+
+.timeline li::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 2px solid var(--border);
+}
+
+.timeline li.done::before {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.timeline li.pending::before {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.timeline li.unavailable::before {
+  background: var(--warning);
+  border-color: var(--warning);
+}
+
+.timeline .row-label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Source-of-record line under a timeline signal, e.g. "SAP S/4HANA ·
+   Inventory". Anchors each correlated signal in a concrete SAP system. */
+.timeline .signal-source {
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  opacity: 0.85;
+}
+
+/* One result-card pattern shared by every outcome block in the rail (campaign
+   draft, approval prompt, dispatch confirmation, suppression note). Same border,
+   radius, padding and inset surface across every state. State is conveyed by the
+   heading and badges, not by a colored edge, keeping the rail visually flat and
+   consistent. */
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+  margin-top: var(--sp-3);
+  background: var(--panel-2);
+}
+
+.result-card h3 {
+  margin: 0 0 var(--sp-1);
+}
+
+.result-card .topic {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--blue);
+  word-break: break-all;
+  display: block;
+  margin: var(--sp-1) 0;
+}
+
+.result-card .prose {
+  font-size: var(--fs-md);
+  line-height: 1.4;
+  margin: var(--sp-1) 0 0;
+}
+
+.campaign-card .headline {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.campaign-card .body-copy {
+  font-size: var(--fs-base);
+  line-height: 1.35;
+  color: var(--text);
+  margin: var(--sp-1) 0 var(--sp-2);
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.metric {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+}
+
+.metric .label {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.metric .value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.metric .value.negative {
+  color: var(--warning);
+}
+
+/* Small source attribution under a metric, e.g. "S/4HANA". Reinforces that the
+   agent's numbers come from SAP systems of record. */
+.metric-source {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.9;
+}
+
+.confidence {
+  margin: var(--sp-2) 0;
+}
+
+.confidence-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.confidence-label {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+.confidence .bar {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-top: var(--sp-1);
+}
+
+.confidence .fill {
+  height: 100%;
+  background: var(--blue);
+}
+
+.rationale {
+  margin: var(--sp-1) 0;
+  padding-left: var(--sp-4);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+
+.rationale li {
+  margin-bottom: 2px;
+}
+
+/* Dim helper copy used for the rail's empty / in-progress states. */
+.rail-hint {
+  color: var(--text-dim);
+  font-size: var(--fs-base);
+  line-height: 1.4;
+  margin: var(--sp-2) 0 0;
+}
+
+.signals-row {
+  margin-top: var(--sp-2);
+}
+
+.tail-actions {
+  margin-top: var(--sp-3);
+}
+
+/* Stack of collapsible approvals. Each card has a clickable header row and a
+   body that holds the campaign detail + Yes/No buttons. Newest is open. */
+.approval-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.approval-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.approval-card.open {
+  border-color: var(--text-dim);
+}
+
+/* Left-edge tint keys each card to its state so the ledger reads at a glance:
+   gold = awaiting your decision, green = approved/dispatched, orange = the
+   agent held it. Resolved/held cards are also slightly dimmed since they are
+   history, not a task. */
+.approval-card--awaiting {
+  border-left: 3px solid var(--gold);
+}
+
+.approval-card--resolved {
+  border-left: 3px solid var(--success);
+  opacity: 0.82;
+}
+
+.approval-card--held {
+  border-left: 3px solid var(--orange);
+  opacity: 0.82;
+}
+
+.approval-card--resolved.open,
+.approval-card--held.open {
+  opacity: 1;
+}
+
+.approval-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.approval-card-head:hover {
+  background: var(--panel);
+}
+
+.approval-card-head .caret {
+  display: inline-block;
+  transition: transform 0.12s ease;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+}
+
+.approval-card-head .caret.open {
+  transform: rotate(90deg);
+}
+
+.approval-card-title {
+  flex: 1 1 auto;
+  font-weight: 600;
+  font-size: var(--fs-base);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.approval-card-body {
+  padding: 10px 12px 12px;
+}
+
+/* Inside a card the campaign card and approval block are already framed by the
+   card, so drop their own outer chrome to avoid a double border. */
+.approval-card-body .result-card {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0 0 var(--sp-2);
+  background: transparent;
+}
+
+.approval-card-body .approval-block {
+  margin-top: var(--sp-2);
+}
+
+.approval-buttons {
+  display: flex;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.approval-buttons .tooltip {
+  flex: 1;
+}
+
+.approval-buttons .btn.big {
+  width: 100%;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: 118%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: var(--fs-sm);
+  z-index: 20;
+  box-shadow: var(--shadow);
+  transition: opacity 0.12s ease;
+}
+
+.tooltip:hover .tip,
+.tooltip:focus-within .tip {
+  visibility: visible;
+  opacity: 1;
+}
+
+
+/* ---- custom event drawer ---- */
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(29, 45, 62, 0.35);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 40;
+  animation: scrim-in 0.14s ease;
+}
+
+.drawer {
+  width: min(460px, 92vw);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  box-shadow: -14px 0 40px rgba(29, 45, 62, 0.18);
+  padding: 16px 18px 24px;
+  animation: drawer-in 0.16s ease;
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.drawer-head h2 {
+  margin: 0;
+  font-size: var(--fs-h2);
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(16px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.custom-event textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+
+/* ---- connect form popover ---- */
+.connect-pop {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 640px;
+  max-width: calc(100vw - 32px);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  z-index: 30;
+  box-shadow: var(--shadow);
+}
+
+/* On phones the popover would be wider than useful and can clip against the
+   viewport edge; pin it to both gutters so it reads as a tidy sheet. */
+@media (max-width: 560px) {
+  .connect-pop {
+    position: fixed;
+    top: 64px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+}
+
+.connect-wrap {
+  position: relative;
+}
+
+/* Connection status dot inside the Broker settings button. */
+.conn-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-right: 7px;
+  vertical-align: middle;
+  background: var(--text-dim);
+}
+.conn-dot.on {
+  background: var(--green, #2e7d32);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green, #2e7d32) 22%, transparent);
+}
+.conn-dot.off {
+  background: var(--text-dim);
+}
+
+.pop-note {
+  margin: 4px 0 12px;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* ---- avatar lab ---- */
+.lab {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+}
+
+.lab .controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-content: flex-start;
+}
+
+.lab .stage {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  position: sticky;
+  top: 24px;
+  height: fit-content;
+}
+
+.section-title {
+  width: 100%;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  margin: 10px 0 2px;
+  text-transform: none;
+}
